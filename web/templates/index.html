@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestão de Dispositivos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+  <div class="dash" id="app">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="logo-wrap">
+        <div class="logo-box">GD</div>
+        <div>
+          <div class="sys-title">GESTÃO DE DISPOSITIVOS</div>
+          <div class="sys-sub">SISTEMA DE CONTROLE INTERNO v1.0</div>
+        </div>
+      </div>
+      <div class="top-right">
+        <div id="apiStatus"><span class="live-dot"></span><span class="live-txt" id="statusTxt">CONECTANDO...</span></div>
+        <div class="clock" id="clk">--:--:--</div>
+      </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="nav">
+      <div class="nav-item active" data-tab="dashboard">DASHBOARD</div>
+      <div class="nav-item" data-tab="aparelhos">APARELHOS</div>
+      <div class="nav-item" data-tab="movimentacoes">MOVIMENTAÇÕES</div>
+      <div class="nav-item" data-tab="colaboradores">COLABORADORES</div>
+    </nav>
+
+    <!-- ===================== TAB: DASHBOARD ===================== -->
+    <section id="tab-dashboard" class="tab-content active">
+
+      <div class="cards-grid">
+        <div class="card-3d c-green"><div class="card-shine"></div>
+          <div class="card-label">total cadastrado</div>
+          <div class="card-value" id="totalAparelhos">--</div>
+          <div class="card-detail" id="totalDetalhe">carregando...</div>
+        </div>
+        <div class="card-3d c-cyan"><div class="card-shine"></div>
+          <div class="card-label">disponíveis</div>
+          <div class="card-value" id="totalDisponiveis">--</div>
+          <div class="card-detail" id="dispDetalhe">--</div>
+        </div>
+        <div class="card-3d c-amber"><div class="card-shine"></div>
+          <div class="card-label">em uso</div>
+          <div class="card-value" id="totalEmUso">--</div>
+          <div class="card-detail">cautelas ativas</div>
+        </div>
+        <div class="card-3d c-red"><div class="card-shine"></div>
+          <div class="card-label">manutenção</div>
+          <div class="card-value" id="totalManutencao">--</div>
+          <div class="card-detail">aguardando retorno</div>
+        </div>
+      </div>
+
+      <div class="mid-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">status dos dispositivos</span>
+            <span class="panel-badge">LIVE</span>
+          </div>
+          <div class="chart-box"><canvas id="dChart" role="img" aria-label="Gráfico de rosca com distribuição de status">Distribuição de status dos aparelhos.</canvas></div>
+          <div class="legend-row" id="donutLegend"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">movimentações — últimos 7 dias</span>
+          </div>
+          <div class="chart-box"><canvas id="lChart" role="img" aria-label="Gráfico de linhas de movimentações dos últimos 7 dias">Saídas e devoluções por dia.</canvas></div>
+          <div style="display:flex;gap:14px;margin-top:8px">
+            <span class="leg-item"><span class="leg-sq" style="background:#39d353"></span>SAÍDAS</span>
+            <span class="leg-item"><span class="leg-sq" style="background:#00e5ff"></span>DEVOLUÇÕES</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <div class="act-card" id="btnCadastrar"><div class="act-shine"></div>
+          <div class="act-icon">[+]</div>
+          <div class="act-title">CADASTRAR APARELHO</div>
+          <div class="act-desc">Registrar novo dispositivo no sistema</div>
+        </div>
+        <div class="act-card" id="btnSaida"><div class="act-shine"></div>
+          <div class="act-icon">[→]</div>
+          <div class="act-title">REGISTRAR SAÍDA</div>
+          <div class="act-desc">Emitir cautela para colaborador</div>
+        </div>
+        <div class="act-card" id="btnDevolucao"><div class="act-shine"></div>
+          <div class="act-icon">[←]</div>
+          <div class="act-title">REGISTRAR DEVOLUÇÃO</div>
+          <div class="act-desc">Dar baixa em cautela ativa</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== TAB: APARELHOS ===================== -->
+    <section id="tab-aparelhos" class="tab-content">
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <span class="panel-title">aparelhos cadastrados</span>
+          <button class="btn-primary" id="btnNovoAparelho">[+] NOVO APARELHO</button>
+        </div>
+        <div class="search-row">
+          <input class="s-input" placeholder="// buscar modelo, imei, série..." id="srchAparelhos"/>
+          <button class="fbtn on" onclick="filtAparelhos('todos',this)">TODOS</button>
+          <button class="fbtn" onclick="filtAparelhos('Disponível',this)">DISPONÍVEL</button>
+          <button class="fbtn" onclick="filtAparelhos('Em Uso',this)">EM USO</button>
+          <button class="fbtn" onclick="filtAparelhos('Manutenção',this)">MANUTENÇÃO</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>MODELO</th><th>IMEI</th><th>N° SÉRIE</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
+            <tbody id="tbodyAparelhos"><tr><td colspan="6" class="loading-row">CARREGANDO...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== TAB: MOVIMENTAÇÕES ===================== -->
+    <section id="tab-movimentacoes" class="tab-content">
+
+      <div class="actions-grid" style="margin-bottom:18px">
+        <div class="act-card" id="btnSaida2"><div class="act-shine"></div>
+          <div class="act-icon">[→]</div>
+          <div class="act-title">REGISTRAR SAÍDA</div>
+          <div class="act-desc">Emitir cautela para colaborador</div>
+        </div>
+        <div class="act-card" id="btnDevolucao2"><div class="act-shine"></div>
+          <div class="act-icon">[←]</div>
+          <div class="act-title">REGISTRAR DEVOLUÇÃO</div>
+          <div class="act-desc">Dar baixa em cautela ativa</div>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <span class="panel-title">histórico de movimentações</span>
+          <span class="panel-badge" id="movBadge">-- REGISTROS</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>APARELHO</th><th>COLABORADOR</th><th>TIPO</th><th>DATA</th><th>OBSERVAÇÃO</th></tr></thead>
+            <tbody id="tbodyMov"><tr><td colspan="6" class="loading-row">CARREGANDO...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== TAB: COLABORADORES ===================== -->
+    <section id="tab-colaboradores" class="tab-content">
+
+      <div class="table-panel">
+        <div class="panel-head">
+          <span class="panel-title">colaboradores cadastrados</span>
+          <button class="btn-primary" id="btnNovoColab">[+] NOVO COLABORADOR</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>NOME</th></tr></thead>
+            <tbody id="tbodyColab"><tr><td colspan="2" class="loading-row">CARREGANDO...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <span class="foot-txt">GESTÃO DE DISPOSITIVOS // REDE INTERNA</span>
+      <span class="foot-txt" id="fdate"></span>
+    </footer>
+
+  </div><!-- /dash -->
+
+  <!-- ===================== MODAIS ===================== -->
+
+  <!-- Modal: Cadastrar Aparelho -->
+  <div class="modal-overlay" id="modalCadastrar">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">CADASTRAR APARELHO</span><span class="modal-close" data-modal="modalCadastrar">✕</span></div>
+      <div class="form-group"><label>Modelo</label><input type="text" id="fModelo" placeholder="ex: Samsung A54"/></div>
+      <div class="form-group"><label>IMEI</label><input type="text" id="fImei" placeholder="15 dígitos"/></div>
+      <div class="form-group"><label>Número de Série</label><input type="text" id="fSerie" placeholder="ex: R58NA0B12XP"/></div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalCadastrar">CANCELAR</button>
+        <button class="btn-primary" id="btnConfCadastrar">CADASTRAR</button>
+      </div>
+      <div class="form-msg" id="msgCadastrar"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Saída -->
+  <div class="modal-overlay" id="modalSaida">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
+      <div class="form-group"><label>ID do Aparelho</label><input type="number" id="fSaidaAparelho" placeholder="ex: 1"/></div>
+      <div class="form-group"><label>Colaborador</label>
+        <select id="fSaidaColab"><option value="">-- selecione --</option></select>
+      </div>
+      <div class="form-group"><label>Tipo de Movimentação</label><input type="text" id="fSaidaTipo" placeholder="ex: Empréstimo, Uso em campo..."/></div>
+      <div class="form-group"><label>Itens Inclusos</label><input type="text" id="fSaidaItens" placeholder="ex: Carregador, Capa..."/></div>
+      <div class="form-group"><label>Observações</label><textarea id="fSaidaObs" rows="2" placeholder="Estado do aparelho..."></textarea></div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalSaida">CANCELAR</button>
+        <button class="btn-primary" id="btnConfSaida">REGISTRAR SAÍDA</button>
+      </div>
+      <div class="form-msg" id="msgSaida"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Devolução -->
+  <div class="modal-overlay" id="modalDevolucao">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
+      <div class="form-group"><label>ID do Aparelho</label><input type="number" id="fDevAparelho" placeholder="ex: 1"/></div>
+      <div class="form-group"><label>Itens Devolvidos</label><input type="text" id="fDevItens" placeholder="ex: Carregador, Capa..."/></div>
+      <div class="form-group"><label>Observações sobre o Estado</label><textarea id="fDevObs" rows="2" placeholder="Estado na devolução..."></textarea></div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalDevolucao">CANCELAR</button>
+        <button class="btn-primary" id="btnConfDev">REGISTRAR DEVOLUÇÃO</button>
+      </div>
+      <div class="form-msg" id="msgDev"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Colaborador -->
+  <div class="modal-overlay" id="modalColab">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">NOVO COLABORADOR</span><span class="modal-close" data-modal="modalColab">✕</span></div>
+      <div class="form-group"><label>Nome</label><input type="text" id="fColabNome" placeholder="Nome completo"/></div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalColab">CANCELAR</button>
+        <button class="btn-primary" id="btnConfColab">CADASTRAR</button>
+      </div>
+      <div class="form-msg" id="msgColab"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
