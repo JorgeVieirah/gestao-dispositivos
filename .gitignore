@@ -1,4 +1,13 @@
+#pastas do ambiente virtual Python
 __pycache__/
 *.pyc
 .venv/
+
+#Banco de dados local
 database/*.db-journal
+database/*.db
+database/*.sqlite3
+
+#termos
+documentos/
+*.docx

@@ -1,4 +1,7 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_file
+import io
+from docxtpl import DocxTemplate
+from datetime import datetime
 from flask_cors import CORS
 import sqlite3
 import os
@@ -299,6 +302,111 @@ def add_colaborador():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
+@app.route('/gerar_termo', methods=['POST'])
+def gerar_termo():
+    try:
+        dados = request.get_json() or {}
+        
+        # Mapeamento de meses para ficar em português
+        meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        hoje = datetime.now()
 
+        # Monta o "Dicionário de Variáveis" que vai substituir os {{ }} no Word
+        contexto = {
+            "nome": dados.get('nome', 'NÃO INFORMADO'),
+            "matricula": dados.get('matricula', '_____'),
+            "marca": dados.get('marca', '_____'),
+            "modelo": dados.get('modelo', '_____'),
+            "imei": dados.get('imei', '_____'),
+            "ns": dados.get('numero_serie', '_____'),
+            "contato": dados.get('contato', '_____'),
+            "obs": dados.get('obs', ''),
+            "dia": hoje.day,
+            "mês": meses[hoje.month],
+            "ano": hoje.year
+        }
+
+        # Carrega o seu Termo_Main.docx
+        caminho_template = os.path.join(BASE_DIR, 'documentos', 'Termo_Main.docx')
+        doc = DocxTemplate(caminho_template)
+        
+        # Faz a mágica da substituição
+        doc.render(contexto)
+
+        # Salva o resultado na memória (sem criar lixo no seu HD)
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        # Envia o arquivo de volta para o navegador fazer o download!
+        nome_arquivo = f"Termo_{contexto['nome'].replace(' ', '_')}.docx"
+        return send_file(file_stream, as_attachment=True, download_name=nome_arquivo, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    
+@app.route('/gerar_termo_devolucao', methods=['POST'])
+def gerar_termo_devolucao():
+    try:
+        dados = request.get_json() or {}
+        
+        meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        hoje = datetime.now()
+
+        # Monta as variáveis que o Word está esperando
+        contexto = {
+            "nome": dados.get('nome', 'NÃO INFORMADO'),
+            "marca": dados.get('marca', '_____'),
+            "modelo": dados.get('modelo', '_____'),
+            "imei": dados.get('imei', '_____'),
+            "contato": dados.get('contato', '_____'),
+            "obs": dados.get('obs', ''),
+            "dia": hoje.day,
+            "mês": meses[hoje.month],
+            "ano": hoje.year
+        }
+
+        # Carrega o seu modelo de devolução
+        caminho_template = os.path.join(BASE_DIR, 'documentos', 'Termo_Devol_Celular.docx')
+        doc = DocxTemplate(caminho_template)
+        
+        doc.render(contexto)
+
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+
+        nome_arquivo = f"Termo_Devolucao_{contexto['nome'].replace(' ', '_')}.docx"
+        return send_file(file_stream, as_attachment=True, download_name=nome_arquivo, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route('/aparelhos/<int:id>/responsavel', methods=['GET'])
+def get_responsavel_aparelho(id):
+    try:
+        conexao = conectar_db()
+        cursor = conexao.cursor()
+        # Busca o nome do colaborador da última 'Saída' deste aparelho
+        cursor.execute("""
+            SELECT c.nome 
+            FROM movimentacoes m
+            JOIN colaboradores c ON m.colaborador_id = c.id
+            WHERE m.aparelho_id = ? AND m.tipo_movimentacao = 'Saída'
+            ORDER BY m.id DESC LIMIT 1
+        """, (id,))
+        resultado = row_para_dict(cursor.fetchone())
+        conexao.close()
+
+        if resultado:
+            return jsonify(resultado) # Retorna {"nome": "Nome da Pessoa"}
+        else:
+            return jsonify({"nome": ""}), 404
+            
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

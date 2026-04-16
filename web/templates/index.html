@@ -12,7 +12,6 @@
 
   <div class="dash" id="app">
 
-    <!-- TOPBAR -->
     <header class="topbar">
       <div class="logo-wrap">
         <div class="logo-box">GD</div>
@@ -27,7 +26,6 @@
       </div>
     </header>
 
-    <!-- NAV -->
     <nav class="nav">
       <div class="nav-item active" data-tab="dashboard">DASHBOARD</div>
       <div class="nav-item" data-tab="aparelhos">APARELHOS</div>
@@ -35,7 +33,6 @@
       <div class="nav-item" data-tab="colaboradores">COLABORADORES</div>
     </nav>
 
-    <!-- ===================== TAB: DASHBOARD ===================== -->
     <section id="tab-dashboard" class="tab-content active">
 
       <div class="cards-grid">
@@ -102,7 +99,6 @@
 
     </section>
 
-    <!-- ===================== TAB: APARELHOS ===================== -->
     <section id="tab-aparelhos" class="tab-content">
 
       <div class="table-panel">
@@ -127,7 +123,6 @@
 
     </section>
 
-    <!-- ===================== TAB: MOVIMENTAÇÕES ===================== -->
     <section id="tab-movimentacoes" class="tab-content">
 
       <div class="actions-grid" style="margin-bottom:18px">
@@ -158,7 +153,6 @@
 
     </section>
 
-    <!-- ===================== TAB: COLABORADORES ===================== -->
     <section id="tab-colaboradores" class="tab-content">
 
       <div class="table-panel">
@@ -176,18 +170,12 @@
 
     </section>
 
-    <!-- FOOTER -->
     <footer class="footer">
       <span class="foot-txt">GESTÃO DE DISPOSITIVOS // REDE INTERNA</span>
       <span class="foot-txt" id="fdate"></span>
     </footer>
 
-  </div><!-- /dash -->
-
-  <!-- ===================== MODAIS ===================== -->
-
-  <!-- Modal: Cadastrar Aparelho -->
-  <div class="modal-overlay" id="modalCadastrar">
+  </div><div class="modal-overlay" id="modalCadastrar">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">CADASTRAR APARELHO</span><span class="modal-close" data-modal="modalCadastrar">✕</span></div>
       <div class="form-group"><label>Modelo</label><input type="text" id="fModelo" placeholder="ex: Samsung A54"/></div>
@@ -201,41 +189,58 @@
     </div>
   </div>
 
-  <!-- Modal: Registrar Saída -->
   <div class="modal-overlay" id="modalSaida">
     <div class="modal">
-      <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
-      <div class="form-group"><label>ID do Aparelho</label><input type="number" id="fSaidaAparelho" placeholder="ex: 1"/></div>
-      <div class="form-group"><label>Colaborador</label>
-        <select id="fSaidaColab"><option value="">-- selecione --</option></select>
+      <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA E GERAR TERMO</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
+      
+      <div style="border-bottom: 1px dashed var(--border2); margin-bottom: 10px; padding-bottom: 10px;">
+        <span style="font-size: 10px; color: var(--green); font-family: var(--mono);"><br/>[ DADOS DO SISTEMA ]</span>
+        <div class="form-group" style="margin-top: 5px;"><label>ID do Aparelho</label><input type="number" id="fSaidaAparelho" placeholder="ex: 1"/></div>
+        <div class="form-group"><label>Colaborador</label><select id="fSaidaColab"><option value="">-- selecione --</option></select></div>
+        <div class="form-group"><label>Tipo de Movimentação</label><input type="text" id="fSaidaTipo" placeholder="ex: Empréstimo, Uso em campo..." value="Saída"/></div>
       </div>
-      <div class="form-group"><label>Tipo de Movimentação</label><input type="text" id="fSaidaTipo" placeholder="ex: Empréstimo, Uso em campo..."/></div>
-      <div class="form-group"><label>Itens Inclusos</label><input type="text" id="fSaidaItens" placeholder="ex: Carregador, Capa..."/></div>
-      <div class="form-group"><label>Observações</label><textarea id="fSaidaObs" rows="2" placeholder="Estado do aparelho..."></textarea></div>
+
+      <div>
+        <span style="font-size: 10px; color: var(--cyan); font-family: var(--mono);">[ DADOS PARA O TERMO DE RESPONSABILIDADE ]</span>
+        <div class="form-group" style="margin-top: 5px;"><label>Matrícula do Colaborador</label><input type="text" id="fTermoMatricula" placeholder="ex: 98765"/></div>
+        <div class="form-group"><label>Nº de Contato (Linha/Voz)</label><input type="text" id="fTermoContato" placeholder="ex: 99999-9999"/></div>
+        <div class="form-group"><label>Itens e Acessórios (Termo)</label><input type="text" id="fSaidaItens" placeholder="ex: Carregador, Capa..."/></div>
+        <div class="form-group"><label>Observações do Termo</label><textarea id="fSaidaObs" rows="2" placeholder="Estado do aparelho..."></textarea></div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="modalSaida">CANCELAR</button>
-        <button class="btn-primary" id="btnConfSaida">REGISTRAR SAÍDA</button>
+        <button class="btn-primary" id="btnConfSaida" style="background: var(--cyan3); border-color: var(--cyan); color: var(--cyan);">REGISTRAR E BAIXAR TERMO</button>
       </div>
       <div class="form-msg" id="msgSaida"></div>
     </div>
   </div>
 
-  <!-- Modal: Registrar Devolução -->
   <div class="modal-overlay" id="modalDevolucao">
     <div class="modal">
-      <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
-      <div class="form-group"><label>ID do Aparelho</label><input type="number" id="fDevAparelho" placeholder="ex: 1"/></div>
-      <div class="form-group"><label>Itens Devolvidos</label><input type="text" id="fDevItens" placeholder="ex: Carregador, Capa..."/></div>
-      <div class="form-group"><label>Observações sobre o Estado</label><textarea id="fDevObs" rows="2" placeholder="Estado na devolução..."></textarea></div>
+      <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO E GERAR TERMO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
+      
+      <div style="border-bottom: 1px dashed var(--border2); margin-bottom: 10px; padding-bottom: 10px;">
+        <span style="font-size: 10px; color: var(--green); font-family: var(--mono);"><br/>[ DADOS DO SISTEMA ]</span>
+        <div class="form-group" style="margin-top: 5px;"><label>ID do Aparelho</label><input type="number" id="fDevAparelho" placeholder="ex: 1"/></div>
+      </div>
+
+      <div>
+        <span style="font-size: 10px; color: var(--cyan); font-family: var(--mono);">[ DADOS PARA O TERMO DE DEVOLUÇÃO ]</span>
+        <div class="form-group" style="margin-top: 5px;"><label>Nome do Colaborador (Que está devolvendo)</label><input type="text" id="fDevNome" placeholder="Nome completo"/></div>
+        <div class="form-group"><label>Nº do Chip / Contato</label><input type="text" id="fDevContato" placeholder="ex: 99999-9999"/></div>
+        <div class="form-group"><label>Itens Devolvidos (Termo)</label><input type="text" id="fDevItens" placeholder="ex: Carregador, Capa..."/></div>
+        <div class="form-group"><label>Estado de Conservação / Observações</label><textarea id="fDevObs" rows="2" placeholder="Estado do aparelho..."></textarea></div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="modalDevolucao">CANCELAR</button>
-        <button class="btn-primary" id="btnConfDev">REGISTRAR DEVOLUÇÃO</button>
+        <button class="btn-primary" id="btnConfDev" style="background: var(--cyan3); border-color: var(--cyan); color: var(--cyan);">REGISTRAR E BAIXAR TERMO</button>
       </div>
       <div class="form-msg" id="msgDev"></div>
     </div>
   </div>
 
-  <!-- Modal: Novo Colaborador -->
   <div class="modal-overlay" id="modalColab">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">NOVO COLABORADOR</span><span class="modal-close" data-modal="modalColab">✕</span></div>

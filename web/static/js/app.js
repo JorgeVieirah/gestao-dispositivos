@@ -55,7 +55,6 @@ function iniciarRelogio() {
 // ─── STATUS DA API ─────────────────────────────────────────────────
 
 async function verificarApi() {
-  // 👉 CORREÇÃO: Agora o JS bate na rota certa para ver se está online
   const { ok } = await apiFetch('/status');
   const dot = document.querySelector('.live-dot');
   const txt = document.getElementById('statusTxt');
@@ -137,7 +136,6 @@ function iniciarGraficoLinhas() {
   const ctx = document.getElementById('lChart');
   if (!ctx) return;
 
-  // Dados de exemplo — substitua por endpoint real quando disponível
   lineChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -279,7 +277,6 @@ async function carregarColaboradores() {
     <tr><td>#${String(c.id).padStart(3,'0')}</td><td>${c.nome}</td></tr>
   `).join('');
 
-  // Atualiza o select do modal de saída
   const sel = document.getElementById('fSaidaColab');
   if (sel) {
     sel.innerHTML = '<option value="">-- selecione --</option>' +
@@ -314,12 +311,16 @@ async function cadastrarAparelho() {
   }
 }
 
+// REGISTRAR SAÍDA E GERAR TERMO (.DOCX)
 async function registrarSaida() {
   const aparelho_id = document.getElementById('fSaidaAparelho').value;
   const colaborador_id = document.getElementById('fSaidaColab').value;
   const tipo_movimentacao = document.getElementById('fSaidaTipo').value.trim() || 'Saída';
   const itens_inclusos = document.getElementById('fSaidaItens').value.trim();
   const observacao_estado = document.getElementById('fSaidaObs').value.trim();
+  
+  const matricula = document.getElementById('fTermoMatricula').value.trim();
+  const contato = document.getElementById('fTermoContato').value.trim();
 
   if (!aparelho_id || !colaborador_id) {
     setMsg('msgSaida', 'INFORME O APARELHO E O COLABORADOR', 'err'); return;
@@ -331,17 +332,58 @@ async function registrarSaida() {
   });
 
   if (ok) {
-    setMsg('msgSaida', 'SAÍDA REGISTRADA COM SUCESSO!', 'ok');
-    setTimeout(() => { closeModal('modalSaida'); recarregarTudo(); }, 1200);
+    setMsg('msgSaida', 'SAÍDA REGISTRADA! GERANDO TERMO...', 'ok');
+    
+    const aparelhoObj = aparelhosCache.find(a => a.id === parseInt(aparelho_id));
+    const selectColab = document.getElementById('fSaidaColab');
+    const colabNome = selectColab.options[selectColab.selectedIndex].text;
+
+    try {
+      const response = await fetch(API_URL + '/gerar_termo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: colabNome,
+          matricula: matricula,
+          marca: aparelhoObj.modelo.split(' ')[0], 
+          modelo: aparelhoObj.modelo,
+          imei: aparelhoObj.imei,
+          numero_serie: aparelhoObj.numero_serie,
+          contato: contato,
+          obs: observacao_estado + " " + itens_inclusos
+        })
+      });
+
+      if(response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Termo_Saida_${colabNome.replace(/\s+/g, '_')}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        console.error("Erro na API ao gerar o termo.");
+      }
+    } catch(err) {
+      console.error("Erro de conexão ao gerar documento:", err);
+    }
+
+    setTimeout(() => { closeModal('modalSaida'); recarregarTudo(); }, 1500);
   } else {
     setMsg('msgSaida', data.erro || 'ERRO AO REGISTRAR', 'err');
   }
 }
 
+// REGISTRAR DEVOLUÇÃO E GERAR TERMO (.DOCX)
 async function registrarDevolucao() {
   const aparelho_id = document.getElementById('fDevAparelho').value;
   const itens_inclusos = document.getElementById('fDevItens').value.trim();
   const observacao_estado = document.getElementById('fDevObs').value.trim();
+  
+  const nome_colaborador = document.getElementById('fDevNome').value.trim();
+  const contato = document.getElementById('fDevContato').value.trim();
 
   if (!aparelho_id) {
     setMsg('msgDev', 'INFORME O ID DO APARELHO', 'err'); return;
@@ -353,8 +395,41 @@ async function registrarDevolucao() {
   });
 
   if (ok) {
-    setMsg('msgDev', 'DEVOLUÇÃO REGISTRADA COM SUCESSO!', 'ok');
-    setTimeout(() => { closeModal('modalDevolucao'); recarregarTudo(); }, 1200);
+    setMsg('msgDev', 'DEVOLUÇÃO REGISTRADA! GERANDO TERMO...', 'ok');
+    
+    const aparelhoObj = aparelhosCache.find(a => a.id === parseInt(aparelho_id));
+
+    try {
+      const response = await fetch(API_URL + '/gerar_termo_devolucao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nome_colaborador || 'Colaborador_Nao_Informado',
+          marca: aparelhoObj.modelo.split(' ')[0],
+          modelo: aparelhoObj.modelo,
+          imei: aparelhoObj.imei,
+          contato: contato,
+          obs: observacao_estado + (itens_inclusos ? " | Itens extras: " + itens_inclusos : "")
+        })
+      });
+
+      if(response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Termo_Devolucao_${(nome_colaborador || 'Aparelho_'+aparelhoObj.id).replace(/\s+/g, '_')}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        console.error("Erro na API ao gerar o termo de devolução.");
+      }
+    } catch(err) {
+      console.error("Erro de conexão ao gerar documento:", err);
+    }
+
+    setTimeout(() => { closeModal('modalDevolucao'); recarregarTudo(); }, 1500);
   } else {
     setMsg('msgDev', data.erro || 'ERRO AO REGISTRAR', 'err');
   }
@@ -431,7 +506,7 @@ function iniciarNavegacao() {
   });
 }
 
-// ─── EVENTOS DOS BOTÕES ────────────────────────────────────────────
+// ─── EVENTOS DOS BOTÕES E AUTO-PREENCHIMENTO ───────────────────────
 
 function iniciarEventos() {
   // Abrir modais
@@ -452,22 +527,41 @@ function iniciarEventos() {
   document.getElementById('btnConfDev')?.addEventListener('click', registrarDevolucao);
   document.getElementById('btnConfColab')?.addEventListener('click', cadastrarColaborador);
 
-  // Fechar modais pelo botão X e CANCELAR
+  // Fechar modais
   document.querySelectorAll('.modal-close, .btn-ghost[data-modal]').forEach(el => {
     el.addEventListener('click', () => closeModal(el.dataset.modal));
   });
 
-  // Fechar modal clicando no overlay
+  // Fechar clicando no overlay
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id); });
   });
 
-  // Busca em tempo real na tabela de aparelhos
+  // Busca na tabela de aparelhos
   document.getElementById('srchAparelhos')?.addEventListener('input', function () {
     const termo = this.value.toLowerCase();
     let lista = filtroAtual === 'todos' ? aparelhosCache : aparelhosCache.filter(a => a.status === filtroAtual);
     if (termo) lista = lista.filter(a => JSON.stringify(a).toLowerCase().includes(termo));
     renderizarAparelhos(lista);
+  });
+
+  // AUTO-PREENCHIMENTO DE NOME NA DEVOLUÇÃO
+  document.getElementById('fDevAparelho')?.addEventListener('blur', async function() {
+    const aparelhoId = this.value.trim();
+    if (!aparelhoId) return;
+
+    const { ok, data } = await apiFetch(`/aparelhos/${aparelhoId}/responsavel`);
+    const campoNome = document.getElementById('fDevNome');
+
+    if (ok && data.nome) {
+      campoNome.value = data.nome;
+      campoNome.style.borderColor = 'var(--green)';
+      campoNome.style.color = 'var(--green)';
+      setTimeout(() => {
+        campoNome.style.borderColor = 'var(--border2)';
+        campoNome.style.color = 'var(--text)';
+      }, 800);
+    }
   });
 }
 
@@ -483,7 +577,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await verificarApi();
   await recarregarTudo();
 
-  // Atualiza os dados a cada 30 segundos automaticamente
   setInterval(async () => {
     await verificarApi();
     await carregarCards();
