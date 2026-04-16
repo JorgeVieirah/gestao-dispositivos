@@ -15,18 +15,22 @@ export default function HomeScreen() {
   const [atualizando, setAtualizando] = useState(false);
 
   // 1. Buscar os dados (GET)
-  const buscarDados = async () => {
-    try {
-      const response = await fetch('http://10.0.36.8:5000/aparelhos');
-      const data = await response.json();
-      setAparelhos(data);
-    } catch (error) {
-      console.error("Erro na API:", error);
-    } finally {
-      setCarregando(false);
-      setAtualizando(false);
-    }
-  };
+const buscarDados = async () => {
+  try {
+    // Puxa o IP do arquivo .env
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    
+    // Usa a crase (`) em vez de aspas para juntar a variável com o caminho
+    const response = await fetch(`${API_URL}/aparelhos`);
+    const data = await response.json();
+    setAparelhos(data);
+  } catch (error) {
+    console.error("Erro na API:", error);
+  } finally {
+    setCarregando(false);
+    setAtualizando(false);
+  }
+};
 
   const aoAtualizar = useCallback(() => {
     setAtualizando(true);
