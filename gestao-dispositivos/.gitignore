@@ -1,0 +1,16 @@
+# Pastas do ambiente virtual Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Banco de dados local
+database/*.db
+database/*.sqlite3
+database/*.db-journal
+
+# Documentos e Termos da Empresa (Protegidos)
+documentos/*.docx
+
+# Variáveis de ambiente e senhas
+.env

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestão de Ativos TI - Grupo Dellys</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+  <div class="dash" id="app">
+    <header class="topbar">
+      <div class="logo-wrap">
+        <div class="logo-box">GD</div>
+        <div>
+          <div class="sys-title">GESTÃO DE ATIVOS</div>
+          <div class="sys-sub">SISTEMA DE CONTROLE INTERNO v1.2</div>
+        </div>
+      </div>
+      <div class="top-right">
+        <div id="apiStatus"><span class="live-dot"></span><span class="live-txt" id="statusTxt">CONECTANDO...</span></div>
+        <div class="clock" id="clk">--:--:--</div>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <div class="nav-item active" data-tab="dashboard">DASHBOARD</div>
+      <div class="nav-item" data-tab="aparelhos">INVENTÁRIO</div>
+      <div class="nav-item" data-tab="movimentacoes">MOVIMENTAÇÕES</div>
+      <div class="nav-item" data-tab="colaboradores">COLABORADORES</div>
+    </nav>
+
+    <section id="tab-dashboard" class="tab-content active">
+      
+      <div class="cards-grid">
+        <div class="card-3d c-green"><div class="card-shine"></div>
+          <div class="card-label">total cadastrado</div>
+          <div class="card-value" id="totalAparelhos">--</div>
+          <div class="card-detail" id="totalDetalhe">carregando...</div>
+        </div>
+        <div class="card-3d c-cyan"><div class="card-shine"></div>
+          <div class="card-label">disponíveis</div>
+          <div class="card-value" id="totalDisponiveis">--</div>
+          <div class="card-detail" id="dispDetalhe">prontos para uso</div>
+        </div>
+        <div class="card-3d c-amber"><div class="card-shine"></div>
+          <div class="card-label">em uso</div>
+          <div class="card-value" id="totalEmUso">--</div>
+          <div class="card-detail">cautelas ativas</div>
+        </div>
+        <div class="card-3d c-red"><div class="card-shine"></div>
+          <div class="card-label">manutenção</div>
+          <div class="card-value" id="totalManutencao">--</div>
+          <div class="card-detail">aguardando retorno</div>
+        </div>
+      </div>
+
+      <div class="mid-grid">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">status dos ativos</span><span class="panel-badge">LIVE</span></div>
+          <div class="chart-box"><canvas id="dChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">movimentações recentes</span></div>
+          <div class="table-wrap">
+              <table style="margin-top: 10px;">
+                <thead><tr><th>ID</th><th>ATIVO</th><th>DATA</th><th>TIPO</th></tr></thead>
+                <tbody id="tbodyMovResumo"></tbody>
+              </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <div class="act-card" id="btnCadastrar"><div class="act-shine"></div><div class="act-icon">[+]</div><div class="act-title">CADASTRAR ATIVO</div><div class="act-desc">Novo Celular, Notebook ou Periférico</div></div>
+        <div class="act-card" id="btnSaida"><div class="act-shine"></div><div class="act-icon">[→]</div><div class="act-title">REGISTRAR SAÍDA</div><div class="act-desc">Emitir termo de responsabilidade</div></div>
+        <div class="act-card" id="btnDevolucao"><div class="act-shine"></div><div class="act-icon">[←]</div><div class="act-title">REGISTRAR DEVOLUÇÃO</div><div class="act-desc">Dar baixa e gerar termo de devolução</div></div>
+      </div>
+    </section>
+
+    <section id="tab-aparelhos" class="tab-content">
+      <div class="table-panel">
+        <div class="panel-head">
+          <span class="panel-title">inventário de ativos</span>
+          <button class="btn-primary" id="btnNovoAparelho">[+] NOVO ATIVO</button>
+        </div>
+        <div class="search-row">
+          <input class="s-input" placeholder="// buscar marca, modelo, série..." id="srchAparelhos"/>
+          <button class="fbtn on" onclick="filtAparelhos('todos',this)">TODOS</button>
+          <button class="fbtn" onclick="filtAparelhos('Disponível',this)">DISPONÍVEL</button>
+          <button class="fbtn" onclick="filtAparelhos('Em Uso',this)">EM USO</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>CATEGORIA</th><th>MODELO</th><th>N° SÉRIE</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
+            <tbody id="tbodyAparelhos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-movimentacoes" class="tab-content">
+      <div class="table-panel">
+        <div class="panel-head"><span class="panel-title">histórico de movimentações</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>ATIVO</th><th>COLABORADOR</th><th>DATA</th><th>TIPO</th></tr></thead>
+            <tbody id="tbodyMov"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-colaboradores" class="tab-content">
+      <div class="table-panel">
+        <div class="panel-head">
+          <span class="panel-title">cadastro de colaboradores</span>
+          <button class="btn-primary" id="btnNovoColab">[+] NOVO COLABORADOR</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>NOME COMPLETO</th><th>USERNAME (LOGON)</th><th>AÇÕES</th></tr></thead>
+            <tbody id="tbodyColab"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer"><span class="foot-txt">DELLYS MANAUS // TI</span><span class="foot-txt" id="fdate"></span></footer>
+  </div>
+
+  <div class="modal-overlay" id="modalCadastrar">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="panel-title" id="tituloModalAparelho">CADASTRAR DISPOSITIVO</span>
+        <span class="modal-close" data-modal="modalCadastrar">✕</span>
+      </div>
+      
+      <input type="hidden" id="fIdAparelho" value="">
+
+      <div class="form-group" style="border-bottom: 1px dashed var(--border2); padding-bottom: 10px; margin-bottom: 15px;">
+        <label>Categoria do Equipamento</label>
+        <select id="fCat" onchange="mudarFormularioCadastro()">
+          <option value="Celular">📱 Celular</option>
+          <option value="Notebook">💻 Notebook</option>
+          <option value="Periférico">⌨️ Periférico</option>
+        </select>
+      </div>
+
+      <div class="form-group"><label>Marca</label><input type="text" id="fMarca" placeholder="ex: Samsung, Dell, Logitech"/></div>
+      <div class="form-group"><label>Modelo</label><input type="text" id="fModelo" placeholder="ex: Galaxy A54, Latitude 3540"/></div>
+      <div class="form-group"><label>Número de Série (N/S)</label><input type="text" id="fSerie" placeholder="Obrigatório"/></div>
+
+      <div id="blocoImei">
+        <div class="form-group"><label>IMEI (15 dígitos)</label><input type="text" id="fImei" placeholder="Obrigatório para celulares"/></div>
+      </div>
+
+      <div id="blocoNotebook" style="display: none; background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 4px;">
+        <div class="form-group"><label>Hostname</label><input type="text" id="fHostname" placeholder="ex: NB-MANAUS-01"/></div>
+      </div>
+
+      <div id="blocoPeriferico" style="display: none;">
+        <div class="form-group"><label>Tipo de Periférico</label><input type="text" id="fTipoPeri" placeholder="ex: Monitor, Headset, Mouse"/></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalCadastrar">CANCELAR</button>
+        <button class="btn-primary" id="btnConfCadastrar">GRAVAR NO SISTEMA</button>
+      </div>
+      <div class="form-msg" id="msgCadastrar"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalDetalhes">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-head">
+        <span class="panel-title">FICHA DO ATIVO</span>
+        <span class="modal-close" data-modal="modalDetalhes">✕</span>
+      </div>
+      <div class="detalhes-grid" id="conteudoDetalhes">
+        </div>
+      <div class="modal-footer" style="justify-content: center; border-top: none;">
+        <button class="btn-ghost" data-modal="modalDetalhes">FECHAR FICHA</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSaida">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
+      <div class="form-group"><label>ID do Ativo</label><input type="number" id="fSaidaAparelho" placeholder="Digite o ID numérico"/></div>
+      <div class="form-group"><label>Colaborador Responsável</label><select id="fSaidaColab"></select></div>
+      <div class="form-group"><label>Matrícula do Colaborador</label><input type="text" id="fTermoMatricula" placeholder="Obrigatório para o termo"/></div>
+      <div class="form-group"><label>Contato/Linha Telefônica</label><input type="text" id="fTermoContato" placeholder="Opcional"/></div>
+      <div class="form-group"><label>Estado de Conservação / Acessórios</label><textarea id="fSaidaObs" placeholder="Ex: Riscos na tela, acompanha carregador e mouse..."></textarea></div>
+      
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalSaida">CANCELAR</button>
+        <button class="btn-primary" id="btnConfSaida">REGISTRAR E BAIXAR TERMO</button>
+      </div>
+      <div class="form-msg" id="msgSaida"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalDevolucao">
+    <div class="modal">
+      <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
+      <div class="form-group"><label>ID do Ativo</label><input type="number" id="fDevAparelho" placeholder="Digite o ID do equipamento"/></div>
+      <div class="form-group"><label>Quem está devolvendo?</label><input type="text" id="fDevNome" placeholder="Buscando responsável..."/></div>
+      <div class="form-group"><label>Contato</label><input type="text" id="fDevContato" placeholder="Opcional"/></div>
+      <div class="form-group"><label>Estado de Devolução / Observações</label><textarea id="fDevObs" placeholder="Avaria constatada, acessórios devolvidos..."></textarea></div>
+      
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalDevolucao">CANCELAR</button>
+        <button class="btn-primary" id="btnConfDev">REGISTRAR E BAIXAR TERMO</button>
+      </div>
+      <div class="form-msg" id="msgDev"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalColab">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="panel-title" id="tituloModalColab">NOVO COLABORADOR</span>
+        <span class="modal-close" data-modal="modalColab">✕</span>
+      </div>
+      
+      <input type="hidden" id="fIdColab" value="">
+
+      <div class="form-group"><label>Nome Completo</label><input type="text" id="fColabNome" placeholder="ex: Jorge André da Costa Vieira"/></div>
+      <div class="form-group"><label>Username / Logon (Windows)</label><input type="text" id="fColabUser" placeholder="ex: jorge.vieira"/></div>
+      
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalColab">CANCELAR</button>
+        <button class="btn-primary" id="btnConfColab">GRAVAR NO SISTEMA</button>
+      </div>
+      <div class="form-msg" id="msgColab"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
