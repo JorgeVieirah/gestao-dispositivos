@@ -120,13 +120,29 @@ window.mudarFormularioCadastro = function() {
 
 async function carregarAparelhos() {
   const tbody = document.getElementById('tbodyAparelhos');
-  if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="loading-row">CARREGANDO...</td></tr>';
+  const selSaidaAtivo = document.getElementById('fSaidaAparelho');
+  const selDevAtivo = document.getElementById('fDevAparelho');
+
+  if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="loading-row">CARREGANDO...</td></tr>';
 
   const { ok, data } = await apiFetch('/aparelhos');
   if (ok) {
     aparelhosCache = data;
     renderizarAparelhos(data);
+
+    // Preenche o Select de Saída apenas com os DISPONÍVEIS
+    if (selSaidaAtivo) {
+      const disponiveis = data.filter(a => a.status === 'Disponível');
+      selSaidaAtivo.innerHTML = '<option value="">-- selecione um ativo disponível --</option>' + 
+        disponiveis.map(a => `<option value="${a.id}">#${a.id} - ${a.modelo} (${a.numero_serie})</option>`).join('');
+    }
+
+    // Preenche o Select de Devolução apenas com os EM USO
+    if (selDevAtivo) {
+      const emUso = data.filter(a => a.status === 'Em Uso');
+      selDevAtivo.innerHTML = '<option value="">-- selecione um ativo em uso --</option>' + 
+        emUso.map(a => `<option value="${a.id}">#${a.id} - ${a.modelo} (${a.numero_serie})</option>`).join('');
+    }
   }
 }
 
@@ -355,8 +371,9 @@ async function registrarSaida() {
     colaborador_id: parseInt(document.getElementById('fSaidaColab').value),
     matricula: document.getElementById('fTermoMatricula').value.trim(),
     contato: document.getElementById('fTermoContato').value.trim(),
-    observacao_estado: document.getElementById('fSaidaObs').value.trim(),
-    acessorios: document.getElementById('fSaidaObs').value.trim()
+    observacao_estado: document.getElementById('fSaidaEstado').value.trim(),
+    obs: document.getElementById('fSaidaEstado').value.trim(), // Garante a compatibilidade com o Word
+    acessorios: document.getElementById('fSaidaAcessorios').value.trim()
   };
   
   if (!body.aparelho_id || !body.colaborador_id || !body.matricula) {
@@ -378,8 +395,9 @@ async function registrarDevolucao() {
     aparelho_id: parseInt(document.getElementById('fDevAparelho').value),
     nome_colab: document.getElementById('fDevNome').value.trim(),
     contato: document.getElementById('fDevContato').value.trim(),
-    obs: document.getElementById('fDevObs').value.trim(),
-    acessorios: document.getElementById('fDevObs').value.trim()
+    observacao_estado: document.getElementById('fDevEstado').value.trim(),
+    obs: document.getElementById('fDevEstado').value.trim(), // Garante a compatibilidade com o Word
+    acessorios: document.getElementById('fDevAcessorios').value.trim()
   };
 
   if (!body.aparelho_id || !body.nome_colab) {
@@ -487,11 +505,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnSaida').onclick = () => { 
     document.querySelectorAll('#modalSaida input, #modalSaida textarea').forEach(i => i.value = '');
+    // Atualiza a lista de aparelhos caso algum status tenha mudado
+    carregarAparelhos();
     openModal('modalSaida'); 
   };
   
   document.getElementById('btnDevolucao').onclick = () => {
     document.querySelectorAll('#modalDevolucao input, #modalDevolucao textarea').forEach(i => i.value = '');
+    // Atualiza a lista de aparelhos caso algum status tenha mudado
+    carregarAparelhos();
     openModal('modalDevolucao');
   };
 
@@ -505,9 +527,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-close, .btn-ghost').forEach(b => b.onclick = () => closeModal(b.closest('.modal-overlay').id));
 
   // Autocomplete do Nome do Responsável na Devolução
-  document.getElementById('fDevAparelho').addEventListener('blur', async function() {
-    if (!this.value) return;
+  document.getElementById('fDevAparelho').addEventListener('change', async function() {
+    if (!this.value) {
+      document.getElementById('fDevNome').value = '';
+      return;
+    }
     const { ok, data } = await apiFetch(`/aparelhos/${this.value}/responsavel`);
     if (ok && data.nome) document.getElementById('fDevNome').value = data.nome;
   });
+
 });

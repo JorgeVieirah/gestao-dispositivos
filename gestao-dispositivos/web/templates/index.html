@@ -145,9 +145,9 @@
       <div class="form-group" style="border-bottom: 1px dashed var(--border2); padding-bottom: 10px; margin-bottom: 15px;">
         <label>Categoria do Equipamento</label>
         <select id="fCat" onchange="mudarFormularioCadastro()">
-          <option value="Celular">📱 Celular</option>
-          <option value="Notebook">💻 Notebook</option>
-          <option value="Periférico">⌨️ Periférico</option>
+          <option value="Celular">Celular</option>
+          <option value="Notebook">Notebook</option>
+          <option value="Periférico">Periférico</option>
         </select>
       </div>
 
@@ -189,14 +189,18 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modalSaida">
+<div class="modal-overlay" id="modalSaida">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
-      <div class="form-group"><label>ID do Ativo</label><input type="number" id="fSaidaAparelho" placeholder="Digite o ID numérico"/></div>
+      
+      <div class="form-group"><label>Selecione o Ativo (Disponíveis)</label><select id="fSaidaAparelho"></select></div>
+      
       <div class="form-group"><label>Colaborador Responsável</label><select id="fSaidaColab"></select></div>
       <div class="form-group"><label>Matrícula do Colaborador</label><input type="text" id="fTermoMatricula" placeholder="Obrigatório para o termo"/></div>
       <div class="form-group"><label>Contato/Linha Telefônica</label><input type="text" id="fTermoContato" placeholder="Opcional"/></div>
-      <div class="form-group"><label>Estado de Conservação / Acessórios</label><textarea id="fSaidaObs" placeholder="Ex: Riscos na tela, acompanha carregador e mouse..."></textarea></div>
+      
+      <div class="form-group"><label>Estado de Conservação</label><input type="text" id="fSaidaEstado" placeholder="Ex: Tela intacta, sem riscos evidentes..."/></div>
+      <div class="form-group"><label>Acessórios Inclusos</label><input type="text" id="fSaidaAcessorios" placeholder="Ex: Carregador original, mouse, mochila..."/></div>
       
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="modalSaida">CANCELAR</button>
@@ -209,10 +213,14 @@
   <div class="modal-overlay" id="modalDevolucao">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
-      <div class="form-group"><label>ID do Ativo</label><input type="number" id="fDevAparelho" placeholder="Digite o ID do equipamento"/></div>
-      <div class="form-group"><label>Quem está devolvendo?</label><input type="text" id="fDevNome" placeholder="Buscando responsável..."/></div>
+      
+      <div class="form-group"><label>Selecione o Ativo (Em Uso)</label><select id="fDevAparelho"></select></div>
+      
+      <div class="form-group"><label>Quem está devolvendo?</label><input type="text" id="fDevNome" placeholder="Selecione o ativo primeiro..."/></div>
       <div class="form-group"><label>Contato</label><input type="text" id="fDevContato" placeholder="Opcional"/></div>
-      <div class="form-group"><label>Estado de Devolução / Observações</label><textarea id="fDevObs" placeholder="Avaria constatada, acessórios devolvidos..."></textarea></div>
+      
+      <div class="form-group"><label>Estado de Devolução</label><input type="text" id="fDevEstado" placeholder="Ex: Avaria constatada na tela..."/></div>
+      <div class="form-group"><label>Acessórios Devolvidos</label><input type="text" id="fDevAcessorios" placeholder="Ex: Apenas fonte de alimentação..."/></div>
       
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="modalDevolucao">CANCELAR</button>

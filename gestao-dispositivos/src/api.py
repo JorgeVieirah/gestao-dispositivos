@@ -405,12 +405,14 @@ def gerar_termo_devolucao():
         conexao = conectar_db()
         cursor = conexao.cursor()
         
+        # 1. Busca os dados do aparelho no banco
         cursor.execute("SELECT * FROM aparelhos WHERE id = ?", (dados.get('aparelho_id'),))
         ativo = row_para_dict(cursor.fetchone())
 
         if not ativo:
             return jsonify({"erro": "Ativo não encontrado"}), 404
 
+        # 2. Define o template correto com base na categoria
         categoria = ativo.get('categoria') or 'Celular'
         
         templates_devolucao = {
@@ -420,29 +422,32 @@ def gerar_termo_devolucao():
         }
         ficheiro_template = templates_devolucao.get(categoria, 'Termo_Devol_Celular.docx')
 
+        # 3. Prepara as variáveis de data e nome
         meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
         hoje = datetime.now()
         nome_colaborador = dados.get('nome_colab', 'Não Informado')
         
         contexto = {
+            **ativo, # Isso injeta TODAS as colunas do banco (numero_serie, imei, marca, modelo, etc.)
             "nome": nome_colaborador,
-            "marca": ativo.get('marca') or '_____',
-            "modelo": ativo.get('modelo') or '_____',
-            "imei": ativo.get('imei') or '_____',
-            "ns": ativo.get('numero_serie') or '_____',
-            "tipo_periferico": ativo.get('tipo_periferico') or '_____',
+            "ns": ativo.get('numero_serie') or '_____', # Mantém 'ns' caso o Word use a tag curta
             "contato": dados.get('contato', '_____'),
             "acessorios": dados.get('acessorios', ''),
             "obs": dados.get('obs', ''),
-            "dia": hoje.day, "mês": meses[hoje.month], "ano": hoje.year
+            "dia": hoje.day, 
+            "mês": meses[hoje.month], 
+            "ano": hoje.year
         }
 
+        # 5. Localiza o template e gera o arquivo
         doc_path = os.path.join(DOCS_DIR, ficheiro_template)
         if not os.path.exists(doc_path):
             return jsonify({"erro": f"Template {ficheiro_template} não encontrado"}), 500
 
         doc = DocxTemplate(doc_path)
         doc.render(contexto)
+        
+        # 6. Prepara o arquivo para download em memória
         output = io.BytesIO()
         doc.save(output)
         output.seek(0)
@@ -460,5 +465,5 @@ def gerar_termo_devolucao():
         if conexao: conexao.close()
 
 if __name__ == '__main__':
-    inicializar_banco() # <-- A MÁGICA ACONTECE AQUI ANTES DO SERVIDOR LIGAR
+    inicializar_banco() 
     app.run(host='0.0.0.0', port=5000, debug=True)
