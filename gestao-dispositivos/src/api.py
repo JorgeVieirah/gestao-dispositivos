@@ -2,6 +2,7 @@ import os
 import io
 import sqlite3
 from datetime import datetime
+from flask_cors import CORS
 from flask import Flask, jsonify, request, send_file, render_template
 from docxtpl import DocxTemplate
 
@@ -15,6 +16,7 @@ DOCS_DIR = os.path.join(BASE_DIR, 'documentos')
 app = Flask(__name__, 
             template_folder=os.path.join(BASE_DIR, 'web', 'templates'),
             static_folder=os.path.join(BASE_DIR, 'web', 'static'))
+CORS(app)
 
 
 # INICIALIZAÇÃO DO BANCO DE DADOS
@@ -49,7 +51,7 @@ def inicializar_banco():
         )
     ''')
     
-    # Tabela 3: Movimentações (Histórico)
+    # Tabela 3: Movimentações
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS movimentacoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -428,7 +430,7 @@ def gerar_termo_devolucao():
         nome_colaborador = dados.get('nome_colab', 'Não Informado')
         
         contexto = {
-            **ativo, # Isso injeta TODAS as colunas do banco (numero_serie, imei, marca, modelo, etc.)
+            **ativo, # injeta TODAS as colunas do banco (numero_serie, imei, marca, modelo, etc.)
             "nome": nome_colaborador,
             "ns": ativo.get('numero_serie') or '_____', # Mantém 'ns' caso o Word use a tag curta
             "contato": dados.get('contato', '_____'),
@@ -465,5 +467,5 @@ def gerar_termo_devolucao():
         if conexao: conexao.close()
 
 if __name__ == '__main__':
-    inicializar_banco() 
+    inicializar_banco()
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,71 +1,135 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+
+// GARANTA QUE ESTE É O IP QUE FUNCIONOU NO NAVEGADOR DO CELULAR
+const API_URL = 'http://172.20.10.2:5000';
 
 export default function CadastroScreen() {
+  const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [imei, setImei] = useState('');
-  const [serie, setSerie] = useState('');
+  const [numeroSerie, setNumeroSerie] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
-  // Salvar novo aparelho (POST)
-  const salvarAparelho = async () => {
-    if (!modelo || !imei || !serie) {
-      Alert.alert("Erro", "Preencha todos os campos!");
+  const salvarDispositivo = async () => {
+    // 1. Validação básica
+    if (!marca || !modelo || !numeroSerie) {
+      Alert.alert("Campos Obrigatórios", "Por favor, preencha a Marca, Modelo e o Número de Série.");
       return;
     }
 
+    setSalvando(true);
+
+    // 2. Monta o pacote de dados igual ao que o Python espera
+    const payload = {
+      categoria: 'Celular', // Por enquanto estamos forçando Celular
+      marca: marca.trim(),
+      modelo: modelo.trim(),
+      numero_serie: numeroSerie.trim(),
+      imei: imei.trim(),
+    };
+
     try {
-      const response = await fetch('http://10.0.36.8:5000/aparelhos', {
+      // 3. Envia para a API Python
+      const response = await fetch(`${API_URL}/aparelhos`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          modelo: modelo,
-          imei: imei,
-          numero_serie: serie,
-          status: 'Disponível'
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        Alert.alert("Sucesso", "Aparelho cadastrado no banco de dados!");
-        // Limpa o formulário após salvar
-        setModelo(''); setImei(''); setSerie('');
+        Alert.alert("Sucesso!", "Dispositivo cadastrado no sistema.");
+        // Limpa os campos após salvar
+        setMarca('');
+        setModelo('');
+        setImei('');
+        setNumeroSerie('');
       } else {
-        const errorData = await response.json();
-        Alert.alert("Erro", errorData.erro || "Falha ao cadastrar.");
+        Alert.alert("Erro ao Salvar", data.erro || "Verifique os dados e tente novamente.");
       }
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível conectar à API.");
+      console.error(error);
+      Alert.alert("Erro de Conexão", "Não foi possível conectar à API. Verifique o IP e se o servidor Python está rodando.");
+    } finally {
+      setSalvando(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.titulo}>➕ Novo Dispositivo</Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.titulo}> Novo Dispositivo</Text>
+        </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Modelo do Aparelho</Text>
-        <TextInput style={styles.input} value={modelo} onChangeText={setModelo} placeholder="Ex: Zebra TC21 ou Samsung S23" />
+        <View style={styles.card}>
+          <Text style={styles.label}>Marca do Aparelho *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ex: Samsung, Motorola, Apple..."
+            value={marca}
+            onChangeText={setMarca}
+          />
 
-        <Text style={styles.label}>IMEI</Text>
-        <TextInput style={styles.input} value={imei} onChangeText={setImei} keyboardType="numeric" placeholder="Digite os 15 dígitos" />
+          <Text style={styles.label}>Modelo do Aparelho *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ex: Galaxy S23, Moto G52..."
+            value={modelo}
+            onChangeText={setModelo}
+          />
 
-        <Text style={styles.label}>Número de Série</Text>
-        <TextInput style={styles.input} value={serie} onChangeText={setSerie} placeholder="S/N do fabricante" />
+          <Text style={styles.label}>IMEI (Apenas para celulares)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite os 15 dígitos"
+            keyboardType="numeric"
+            value={imei}
+            onChangeText={setImei}
+            maxLength={15}
+          />
 
-        <TouchableOpacity style={styles.botao} onPress={salvarAparelho}>
-          <Text style={styles.textoBotao}>Salvar no Sistema</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <Text style={styles.label}>Número de Série (S/N) *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="S/N do fabricante"
+            value={numeroSerie}
+            onChangeText={setNumeroSerie}
+            autoCapitalize="characters"
+          />
+
+          <TouchableOpacity 
+            style={[styles.botaoSalvar, salvando && styles.botaoDesativado]} 
+            onPress={salvarDispositivo}
+            disabled={salvando}
+          >
+            {salvando ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.textoBotao}>Salvar no Sistema</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f8fafc', paddingTop: 60 },
-  titulo: { fontSize: 28, fontWeight: 'bold', color: '#1e293b', marginBottom: 30 },
-  form: { backgroundColor: '#fff', padding: 20, borderRadius: 15, elevation: 3 },
-  label: { fontSize: 16, fontWeight: '600', color: '#475569', marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 16 },
-  botao: { backgroundColor: '#10b981', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  textoBotao: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+  container: { flexGrow: 1, padding: 20, backgroundColor: '#23253a', paddingTop: 60 },
+  header: { marginBottom: 20 },
+  titulo: { fontSize: 28, fontWeight: 'bold', color: '#ffffff' },
+  card: { backgroundColor: '#353750', padding: 20, borderRadius: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  label: { fontSize: 14, fontWeight: '600', color: '#7b8696', marginBottom: 6, marginTop: 12 },
+  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#f8fafc', color: '#1e293b' },
+  botaoSalvar: { backgroundColor: '#10b981', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 24 },
+  botaoDesativado: { backgroundColor: '#6ee7b7' },
+  textoBotao: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

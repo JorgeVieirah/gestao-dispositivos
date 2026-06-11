@@ -8,9 +8,9 @@ let colabCache = [];
 let filtroAtual = 'todos';
 let donutChart = null;
 
-// ==========================================
+
 // UTILITÁRIOS E COMPONENTES VISUAIS
-// ==========================================
+
 async function apiFetch(path, options = {}) {
   try {
     const res = await fetch(API_URL + path, {
@@ -434,10 +434,10 @@ async function baixarArquivo(rota, body) {
       a.remove();
     } else {
       const data = await res.json();
-      alert(`⚠️ Erro ao gerar o termo: ${data.erro}`);
+      alert(` Erro ao gerar o termo: ${data.erro}`);
     }
   } catch (error) {
-    alert("⚠️ Erro crítico de comunicação ao tentar baixar o documento.");
+    alert(" Erro crítico de comunicação ao tentar baixar o documento.");
   }
 }
 
