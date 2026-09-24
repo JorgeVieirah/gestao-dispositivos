@@ -13,6 +13,9 @@
 <body>
 
   <div class="dash" id="app">
+    <!-- ========================================== -->
+    <!-- CABEÇALHO SUPERIOR FIXO                    -->
+    <!-- ========================================== -->
     <header class="topbar">
       <div class="logo-wrap">
         <div class="logo-box">GD</div>
@@ -27,112 +30,156 @@
       </div>
     </header>
 
-    <nav class="nav">
-      <div class="nav-item active" data-tab="dashboard">DASHBOARD</div>
-      <div class="nav-item" data-tab="aparelhos">INVENTÁRIO</div>
-      <div class="nav-item" data-tab="movimentacoes">MOVIMENTAÇÕES</div>
-      <div class="nav-item" data-tab="colaboradores">COLABORADORES</div>
-    </nav>
-
-    <section id="tab-dashboard" class="tab-content active">
+    <!-- ========================================== -->
+    <!-- NOVO LAYOUT: ESTRUTURA LATERAL (FLEXBOX)   -->
+    <!-- ========================================== -->
+    <div class="layout-wrapper">
       
-      <div class="cards-grid">
-        <div class="card-3d c-green"><div class="card-shine"></div>
-          <div class="card-label">total cadastrado</div>
-          <div class="card-value" id="totalAparelhos">--</div>
-          <div class="card-detail" id="totalDetalhe">carregando...</div>
-        </div>
-        <div class="card-3d c-cyan"><div class="card-shine"></div>
-          <div class="card-label">disponíveis</div>
-          <div class="card-value" id="totalDisponiveis">--</div>
-          <div class="card-detail" id="dispDetalhe">prontos para uso</div>
-        </div>
-        <div class="card-3d c-amber"><div class="card-shine"></div>
-          <div class="card-label">em uso</div>
-          <div class="card-value" id="totalEmUso">--</div>
-          <div class="card-detail">cautelas ativas</div>
-        </div>
-        <div class="card-3d c-red"><div class="card-shine"></div>
-          <div class="card-label">manutenção</div>
-          <div class="card-value" id="totalManutencao">--</div>
-          <div class="card-detail">aguardando retorno</div>
-        </div>
-      </div>
+      <!-- MENU LATERAL (SIDEBAR) -->
+      <!-- Documentação: O CSS deve definir esta <aside> com uma largura fixa (ex: 250px) -->
+      <aside class="sidebar">
+        <nav class="nav">
+          <div class="nav-item active" data-tab="dashboard">DASHBOARD</div>
+          <div class="nav-item" data-tab="aparelhos">INVENTÁRIO</div>
+          <div class="nav-item" data-tab="movimentacoes">MOVIMENTAÇÕES</div>
+          <div class="nav-item" data-tab="colaboradores">COLABORADORES</div>
+          <div class="nav-item" data-tab="linhas">LINHAS CORP.</div>
+        </nav>
+      </aside>
 
-      <div class="mid-grid">
-        <div class="panel">
-          <div class="panel-head"><span class="panel-title">status dos ativos</span><span class="panel-badge">LIVE</span></div>
-          <div class="chart-box"><canvas id="dChart"></canvas></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><span class="panel-title">movimentações recentes</span></div>
-          <div class="table-wrap">
-              <table style="margin-top: 10px;">
-                <thead><tr><th>ID</th><th>ATIVO</th><th>DATA</th><th>TIPO</th></tr></thead>
-                <tbody id="tbodyMovResumo"></tbody>
-              </table>
+      <!-- ÁREA PRINCIPAL ONDE AS TELAS APARECEM -->
+      <main class="main-content">
+
+        <!-- TELA 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content active">
+          <!-- Cards de Resumo -->
+          <div class="cards-grid">
+            <div class="card-3d c-green"><div class="card-shine"></div>
+              <div class="card-label">total cadastrado</div>
+              <div class="card-value" id="totalAparelhos">--</div>
+              <div class="card-detail" id="totalDetalhe">carregando...</div>
+            </div>
+            <div class="card-3d c-cyan"><div class="card-shine"></div>
+              <div class="card-label">disponíveis</div>
+              <div class="card-value" id="totalDisponiveis">--</div>
+              <div class="card-detail" id="dispDetalhe">prontos para uso</div>
+            </div>
+            <div class="card-3d c-amber"><div class="card-shine"></div>
+              <div class="card-label">em uso</div>
+              <div class="card-value" id="totalEmUso">--</div>
+              <div class="card-detail">cautelas ativas</div>
+            </div>
+            <div class="card-3d c-red"><div class="card-shine"></div>
+              <div class="card-label">manutenção</div>
+              <div class="card-value" id="totalManutencao">--</div>
+              <div class="card-detail">aguardando retorno</div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="actions-grid">
-        <div class="act-card" id="btnCadastrar"><div class="act-shine"></div><div class="act-icon">[+]</div><div class="act-title">CADASTRAR ATIVO</div><div class="act-desc">Novo Celular, Notebook ou Periférico</div></div>
-        <div class="act-card" id="btnSaida"><div class="act-shine"></div><div class="act-icon">[→]</div><div class="act-title">REGISTRAR SAÍDA</div><div class="act-desc">Emitir termo de responsabilidade</div></div>
-        <div class="act-card" id="btnDevolucao"><div class="act-shine"></div><div class="act-icon">[←]</div><div class="act-title">REGISTRAR DEVOLUÇÃO</div><div class="act-desc">Dar baixa e gerar termo de devolução</div></div>
-      </div>
-    </section>
+          <!-- Gráficos e Tabelas Rápidas -->
+          <div class="mid-grid">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">status dos ativos</span><span class="panel-badge">LIVE</span></div>
+              <div class="chart-box"><canvas id="dChart"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">movimentações recentes</span></div>
+              <div class="table-wrap">
+                  <table style="margin-top: 10px;">
+                    <thead><tr><th>ID</th><th>ATIVO</th><th>DATA</th><th>TIPO</th></tr></thead>
+                    <tbody id="tbodyMovResumo"></tbody>
+                  </table>
+              </div>
+            </div>
+          </div>
 
-    <section id="tab-aparelhos" class="tab-content">
-      <div class="table-panel">
-        <div class="panel-head">
-          <span class="panel-title">inventário de ativos</span>
-          <button class="btn-primary" id="btnNovoAparelho">[+] NOVO ATIVO</button>
-        </div>
-        <div class="search-row">
-          <input class="s-input" placeholder="// buscar marca, modelo, série..." id="srchAparelhos"/>
-          <button class="fbtn on" onclick="filtAparelhos('todos',this)">TODOS</button>
-          <button class="fbtn" onclick="filtAparelhos('Disponível',this)">DISPONÍVEL</button>
-          <button class="fbtn" onclick="filtAparelhos('Em Uso',this)">EM USO</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>ID</th><th>CATEGORIA</th><th>MODELO</th><th>N° SÉRIE</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
-            <tbody id="tbodyAparelhos"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+          <!-- Ações Rápidas -->
+          <div class="actions-grid">
+            <div class="act-card" id="btnCadastrar"><div class="act-shine"></div><div class="act-icon">[+]</div><div class="act-title">CADASTRAR ATIVO</div><div class="act-desc">Novo Celular, Notebook ou Periférico</div></div>
+            <div class="act-card" id="btnSaida"><div class="act-shine"></div><div class="act-icon">[→]</div><div class="act-title">REGISTRAR SAÍDA</div><div class="act-desc">Emitir termo de responsabilidade</div></div>
+            <div class="act-card" id="btnDevolucao"><div class="act-shine"></div><div class="act-icon">[←]</div><div class="act-title">REGISTRAR DEVOLUÇÃO</div><div class="act-desc">Dar baixa e gerar termo de devolução</div></div>
+          </div>
+        </section>
 
-    <section id="tab-movimentacoes" class="tab-content">
-      <div class="table-panel">
-        <div class="panel-head"><span class="panel-title">histórico de movimentações</span></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>ID</th><th>ATIVO</th><th>COLABORADOR</th><th>DATA</th><th>TIPO</th></tr></thead>
-            <tbody id="tbodyMov"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <!-- TELA 2: INVENTÁRIO -->
+        <section id="tab-aparelhos" class="tab-content">
+          <div class="table-panel">
+            <div class="panel-head">
+              <span class="panel-title">inventário de ativos</span>
+              <button class="btn-primary" id="btnNovoAparelho">[+] NOVO ATIVO</button>
+            </div>
+            <div class="search-row">
+              <input class="s-input" placeholder="// buscar marca, modelo, série..." id="srchAparelhos"/>
+              <button class="fbtn on" onclick="filtAparelhos('todos',this)">TODOS</button>
+              <button class="fbtn" onclick="filtAparelhos('Disponível',this)">DISPONÍVEL</button>
+              <button class="fbtn" onclick="filtAparelhos('Em Uso',this)">EM USO</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>CATEGORIA</th><th>MODELO</th><th>N° SÉRIE</th><th>STATUS</th><th>AÇÕES</th></tr></thead>
+                <tbody id="tbodyAparelhos"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-    <section id="tab-colaboradores" class="tab-content">
-      <div class="table-panel">
-        <div class="panel-head">
-          <span class="panel-title">cadastro de colaboradores</span>
-          <button class="btn-primary" id="btnNovoColab">[+] NOVO COLABORADOR</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>ID</th><th>NOME COMPLETO</th><th>USERNAME (LOGON)</th><th>AÇÕES</th></tr></thead>
-            <tbody id="tbodyColab"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <!-- TELA 3: MOVIMENTAÇÕES -->
+        <section id="tab-movimentacoes" class="tab-content">
+          <div class="table-panel">
+            <div class="panel-head"><span class="panel-title">histórico de movimentações</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>ATIVO</th><th>COLABORADOR</th><th>DATA</th><th>TIPO</th></tr></thead>
+                <tbody id="tbodyMov"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
+        <!-- TELA 4: COLABORADORES -->
+        <section id="tab-colaboradores" class="tab-content">
+          <div class="table-panel">
+            <div class="panel-head">
+              <span class="panel-title">cadastro de colaboradores</span>
+              <button class="btn-primary" id="btnNovoColab">[+] NOVO COLABORADOR</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>NOME COMPLETO</th><th>USERNAME (LOGON)</th><th>AÇÕES</th></tr></thead>
+                <tbody id="tbodyColab"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TELA 5: LINHAS CORPORATIVAS (NOVA) -->
+        <section id="tab-linhas" class="tab-content">
+          <div class="table-panel">
+            <div class="panel-head">
+              <span class="panel-title">gestão de linhas corporativas</span>
+              <button class="btn-primary" id="btnNovaLinha">[+] NOVA LINHA</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>NÚMERO DA LINHA</th><th>STATUS</th><th>APARELHO VINCULADO</th></tr></thead>
+                <tbody id="tbodyLinhas"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main> <!-- Fim da tag <main> -->
+    </div> <!-- Fim da <div class="layout-wrapper"> -->
+
+    <!-- RODAPÉ -->
     <footer class="footer"><span class="foot-txt">DELLYS MANAUS // TI</span><span class="foot-txt" id="fdate"></span></footer>
   </div>
 
+  <!-- ========================================== -->
+  <!-- ÁREA DOS MODAIS (JANELAS SUSPENSAS)        -->
+  <!-- ========================================== -->
+
+  <!-- MODAL: CADASTRAR/EDITAR APARELHO -->
   <div class="modal-overlay" id="modalCadastrar">
     <div class="modal">
       <div class="modal-head">
@@ -157,6 +204,14 @@
 
       <div id="blocoImei">
         <div class="form-group"><label>IMEI (15 dígitos)</label><input type="text" id="fImei" placeholder="Obrigatório para celulares"/></div>
+        
+        <!-- Campo para vincular o chip ao aparelho -->
+        <div id="blocoLinha" class="form-group" style="display: none; margin-top: 15px;">
+          <label>Linha Corporativa (Chip)</label>
+          <select id="fLinhaId" style="width: 100%; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid var(--border2); color: var(--text);">
+            <option value="">-- Nenhuma / Sem Chip --</option>
+          </select>
+        </div>
       </div>
 
       <div id="blocoNotebook" style="display: none; background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 4px;">
@@ -175,30 +230,29 @@
     </div>
   </div>
 
+  <!-- MODAL: DETALHES DO ATIVO -->
   <div class="modal-overlay" id="modalDetalhes">
     <div class="modal" style="max-width: 550px;">
       <div class="modal-head">
         <span class="panel-title">FICHA DO ATIVO</span>
         <span class="modal-close" data-modal="modalDetalhes">✕</span>
       </div>
-      <div class="detalhes-grid" id="conteudoDetalhes">
-        </div>
+      <div class="detalhes-grid" id="conteudoDetalhes"></div>
       <div class="modal-footer" style="justify-content: center; border-top: none;">
         <button class="btn-ghost" data-modal="modalDetalhes">FECHAR FICHA</button>
       </div>
     </div>
   </div>
 
-<div class="modal-overlay" id="modalSaida">
+  <!-- MODAL: REGISTRAR SAÍDA -->
+  <div class="modal-overlay" id="modalSaida">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">REGISTRAR SAÍDA</span><span class="modal-close" data-modal="modalSaida">✕</span></div>
       
       <div class="form-group"><label>Selecione o Ativo (Disponíveis)</label><select id="fSaidaAparelho"></select></div>
-      
       <div class="form-group"><label>Colaborador Responsável</label><select id="fSaidaColab"></select></div>
       <div class="form-group"><label>Matrícula do Colaborador</label><input type="text" id="fTermoMatricula" placeholder="Obrigatório para o termo"/></div>
       <div class="form-group"><label>Contato/Linha Telefônica</label><input type="text" id="fTermoContato" placeholder="Opcional"/></div>
-      
       <div class="form-group"><label>Estado de Conservação</label><input type="text" id="fSaidaEstado" placeholder="Ex: Tela intacta, sem riscos evidentes..."/></div>
       <div class="form-group"><label>Acessórios Inclusos</label><input type="text" id="fSaidaAcessorios" placeholder="Ex: Carregador original, mouse, mochila..."/></div>
       
@@ -210,15 +264,14 @@
     </div>
   </div>
 
+  <!-- MODAL: REGISTRAR DEVOLUÇÃO -->
   <div class="modal-overlay" id="modalDevolucao">
     <div class="modal">
       <div class="modal-head"><span class="panel-title">REGISTRAR DEVOLUÇÃO</span><span class="modal-close" data-modal="modalDevolucao">✕</span></div>
       
       <div class="form-group"><label>Selecione o Ativo (Em Uso)</label><select id="fDevAparelho"></select></div>
-      
       <div class="form-group"><label>Quem está devolvendo?</label><input type="text" id="fDevNome" placeholder="Selecione o ativo primeiro..."/></div>
       <div class="form-group"><label>Contato</label><input type="text" id="fDevContato" placeholder="Opcional"/></div>
-      
       <div class="form-group"><label>Estado de Devolução</label><input type="text" id="fDevEstado" placeholder="Ex: Avaria constatada na tela..."/></div>
       <div class="form-group"><label>Acessórios Devolvidos</label><input type="text" id="fDevAcessorios" placeholder="Ex: Apenas fonte de alimentação..."/></div>
       
@@ -230,6 +283,7 @@
     </div>
   </div>
 
+  <!-- MODAL: NOVO COLABORADOR -->
   <div class="modal-overlay" id="modalColab">
     <div class="modal">
       <div class="modal-head">
@@ -250,8 +304,29 @@
     </div>
   </div>
 
+  <!-- MODAL: CADASTRAR NOVA LINHA -->
+  <div class="modal-overlay" id="modalLinha">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="panel-title">CADASTRAR NOVA LINHA</span>
+        <span class="modal-close" data-modal="modalLinha">✕</span>
+      </div>
+      
+      <div class="form-group">
+        <label>Número do Chip (Ex: 92 99999-9999)</label>
+        <input type="text" id="fLinhaNumero" placeholder="Digite o número da linha..."/>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="modalLinha">CANCELAR</button>
+        <button class="btn-primary" id="btnConfLinha">GRAVAR NO SISTEMA</button>
+      </div>
+      <div class="form-msg" id="msgLinha"></div>
+    </div>
+  </div>
+
+  <!-- SCRIPT EXTERNO (CHART.JS E APP.JS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-  
   <script src="/static/js/app.js"></script>
 </body>
 </html>

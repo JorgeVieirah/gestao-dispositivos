@@ -5,12 +5,13 @@ const API_URL = window.location.origin;
 // ==========================================
 let aparelhosCache = [];
 let colabCache = [];
+let linhasCache = []; // NOVO CACHE DE LINHAS
 let filtroAtual = 'todos';
 let donutChart = null;
 
-
+// ==========================================
 // UTILITÁRIOS E COMPONENTES VISUAIS
-
+// ==========================================
 async function apiFetch(path, options = {}) {
   try {
     const res = await fetch(API_URL + path, {
@@ -109,11 +110,62 @@ function atualizarGraficoDonut(disp, uso, mnt) {
 }
 
 // ==========================================
+// GESTÃO DE LINHAS CORPORATIVAS (NOVO CRUD)
+// ==========================================
+async function carregarLinhas() {
+  const tbody = document.getElementById('tbodyLinhas');
+  const selLinha = document.getElementById('fLinhaId'); // Novo select no modal de Aparelho
+
+  if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="loading-row">CARREGANDO...</td></tr>';
+
+  const { ok, data } = await apiFetch('/linhas');
+  if (ok) {
+    linhasCache = data;
+    
+    if (tbody) {
+      tbody.innerHTML = data.map(l => `
+        <tr>
+          <td>#${String(l.id).padStart(3,'0')}</td>
+          <td>${l.numero}</td>
+          <td>${l.em_uso ? '<span class="badge badge-uso">EM USO</span>' : '<span class="badge badge-disp">DISPONÍVEL</span>'}</td>
+          <td style="color: var(--cyan);">${l.aparelho_vinculado}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Preenche o modal de cadastro de aparelho com as linhas
+    if (selLinha) {
+      selLinha.innerHTML = '<option value="">-- Nenhuma / Sem Chip --</option>' + 
+        data.map(l => `<option value="${l.id}" ${l.em_uso ? 'disabled' : ''}>${l.numero} ${l.em_uso ? '(Em Uso)' : ''}</option>`).join('');
+    }
+  }
+}
+
+async function cadastrarLinha() {
+  const numero = document.getElementById('fLinhaNumero').value.trim();
+  if (!numero) { setMsg('msgLinha', 'O NÚMERO É OBRIGATÓRIO!', 'err'); return; }
+
+  const { ok, data } = await apiFetch('/linhas', { method: 'POST', body: JSON.stringify({ numero }) });
+  if (ok) {
+    setMsg('msgLinha', 'CADASTRADA COM SUCESSO!', 'ok');
+    setTimeout(() => { closeModal('modalLinha'); recarregarTudo(); }, 1200);
+  } else {
+    setMsg('msgLinha', data.erro, 'err');
+  }
+}
+
+
+// ==========================================
 // GESTÃO DE EQUIPAMENTOS (CRUD)
 // ==========================================
 window.mudarFormularioCadastro = function() {
   const cat = document.getElementById('fCat').value;
   document.getElementById('blocoImei').style.display = (cat === 'Celular') ? 'block' : 'none';
+  
+  // Exibe o campo de Linha apenas se for celular
+  const blocoLinha = document.getElementById('blocoLinha');
+  if(blocoLinha) blocoLinha.style.display = (cat === 'Celular') ? 'block' : 'none';
+  
   document.getElementById('blocoNotebook').style.display = (cat === 'Notebook') ? 'block' : 'none';
   document.getElementById('blocoPeriferico').style.display = (cat === 'Periférico') ? 'block' : 'none';
 };
@@ -130,14 +182,12 @@ async function carregarAparelhos() {
     aparelhosCache = data;
     renderizarAparelhos(data);
 
-    // Preenche o Select de Saída apenas com os DISPONÍVEIS
     if (selSaidaAtivo) {
       const disponiveis = data.filter(a => a.status === 'Disponível');
       selSaidaAtivo.innerHTML = '<option value="">-- selecione um ativo disponível --</option>' + 
         disponiveis.map(a => `<option value="${a.id}">#${a.id} - ${a.modelo} (${a.numero_serie})</option>`).join('');
     }
 
-    // Preenche o Select de Devolução apenas com os EM USO
     if (selDevAtivo) {
       const emUso = data.filter(a => a.status === 'Em Uso');
       selDevAtivo.innerHTML = '<option value="">-- selecione um ativo em uso --</option>' + 
@@ -186,6 +236,8 @@ window.abrirDetalhes = function(id) {
     <div class="detalhe-item" style="grid-column: span 2"><span class="detalhe-label">N° DE SÉRIE</span><span class="detalhe-valor">${ativo.numero_serie}</span></div>
   `;
   if (ativo.imei && ativo.categoria === 'Celular') html += `<div class="detalhe-item" style="grid-column: span 2"><span class="detalhe-label">IMEI</span><span class="detalhe-valor">${ativo.imei}</span></div>`;
+  // Exibindo a Linha vinculada no Ver Detalhes
+  if (ativo.linha_id) html += `<div class="detalhe-item" style="grid-column: span 2"><span class="detalhe-label">LINHA (CHIP)</span><span class="detalhe-valor">ID #${ativo.linha_id}</span></div>`;
   if (ativo.hostname) html += `<div class="detalhe-item"><span class="detalhe-label">HOSTNAME</span><span class="detalhe-valor">${ativo.hostname}</span></div>`;
   if (ativo.tipo_periferico) html += `<div class="detalhe-item" style="grid-column: span 2"><span class="detalhe-label">TIPO</span><span class="detalhe-valor">${ativo.tipo_periferico}</span></div>`;
   
@@ -196,6 +248,8 @@ window.abrirDetalhes = function(id) {
 async function cadastrarAparelho() {
   const id = document.getElementById('fIdAparelho').value;
   const cat = document.getElementById('fCat').value;
+  const linhaIdVal = document.getElementById('fLinhaId') ? document.getElementById('fLinhaId').value : '';
+
   const payload = {
     categoria: cat,
     marca: document.getElementById('fMarca').value.trim(),
@@ -203,7 +257,9 @@ async function cadastrarAparelho() {
     numero_serie: document.getElementById('fSerie').value.trim(),
     imei: document.getElementById('fImei').value.trim(),
     hostname: document.getElementById('fHostname').value.trim(),
-    tipo_periferico: document.getElementById('fTipoPeri').value.trim()
+    tipo_periferico: document.getElementById('fTipoPeri').value.trim(),
+    // Se for celular e houver uma linha selecionada, envia o ID
+    linha_id: (cat === 'Celular' && linhaIdVal) ? parseInt(linhaIdVal) : null 
   };
 
   if (!payload.marca || !payload.modelo || !payload.numero_serie) {
@@ -239,6 +295,11 @@ window.editarAparelho = function(id) {
   document.getElementById('fImei').value = ativo.imei || '';
   document.getElementById('fHostname').value = ativo.hostname || '';
   document.getElementById('fTipoPeri').value = ativo.tipo_periferico || '';
+  
+  // Caso exista o campo de linha e o aparelho já tenha uma vinculada
+  if(document.getElementById('fLinhaId')){
+    document.getElementById('fLinhaId').value = ativo.linha_id || '';
+  }
   
   window.mudarFormularioCadastro();
   openModal('modalCadastrar');
@@ -372,7 +433,7 @@ async function registrarSaida() {
     matricula: document.getElementById('fTermoMatricula').value.trim(),
     contato: document.getElementById('fTermoContato').value.trim(),
     observacao_estado: document.getElementById('fSaidaEstado').value.trim(),
-    obs: document.getElementById('fSaidaEstado').value.trim(), // Garante a compatibilidade com o Word
+    obs: document.getElementById('fSaidaEstado').value.trim(), 
     acessorios: document.getElementById('fSaidaAcessorios').value.trim()
   };
   
@@ -396,7 +457,7 @@ async function registrarDevolucao() {
     nome_colab: document.getElementById('fDevNome').value.trim(),
     contato: document.getElementById('fDevContato').value.trim(),
     observacao_estado: document.getElementById('fDevEstado').value.trim(),
-    obs: document.getElementById('fDevEstado').value.trim(), // Garante a compatibilidade com o Word
+    obs: document.getElementById('fDevEstado').value.trim(), 
     acessorios: document.getElementById('fDevAcessorios').value.trim()
   };
 
@@ -447,8 +508,8 @@ async function baixarArquivo(rota, body) {
 function iniciarRelogio() {
   const tick = () => {
     const n = new Date(), p = v => String(v).padStart(2, '0');
-    document.getElementById('clk').textContent = `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
-    document.getElementById('fdate').textContent = n.toLocaleDateString('pt-BR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase();
+    if(document.getElementById('clk')) document.getElementById('clk').textContent = `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+    if(document.getElementById('fdate')) document.getElementById('fdate').textContent = n.toLocaleDateString('pt-BR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase();
   };
   tick(); setInterval(tick, 1000);
 }
@@ -459,6 +520,7 @@ async function recarregarTudo() {
     await carregarAparelhos();
     await carregarColaboradores();
     await carregarMovimentacoes();
+    await carregarLinhas(); // NOVO: Carrega as linhas no start
     atualizarStatusConexao(true);
   } catch (e) {
     atualizarStatusConexao(false);
@@ -479,11 +541,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Botões de Abrir Modal (Garantindo que limpam IDs antigos)
+  // Botões de Abrir Modal (Aparelhos)
   document.getElementById('btnCadastrar').onclick = () => { 
     document.getElementById('fIdAparelho').value = '';
     document.getElementById('tituloModalAparelho').textContent = 'CADASTRAR DISPOSITIVO';
     document.querySelectorAll('#modalCadastrar input').forEach(i => i.value = '');
+    if(document.getElementById('fLinhaId')) document.getElementById('fLinhaId').value = '';
     window.mudarFormularioCadastro();
     openModal('modalCadastrar'); 
   };
@@ -492,10 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fIdAparelho').value = '';
     document.getElementById('tituloModalAparelho').textContent = 'CADASTRAR DISPOSITIVO';
     document.querySelectorAll('#modalCadastrar input').forEach(i => i.value = '');
+    if(document.getElementById('fLinhaId')) document.getElementById('fLinhaId').value = '';
     window.mudarFormularioCadastro();
     openModal('modalCadastrar'); 
   };
 
+  // Botões de Abrir Modal (Colaboradores e Movimentações)
   document.getElementById('btnNovoColab').onclick = () => { 
     document.getElementById('fIdColab').value = '';
     document.getElementById('tituloModalColab').textContent = 'NOVO COLABORADOR';
@@ -505,23 +570,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnSaida').onclick = () => { 
     document.querySelectorAll('#modalSaida input, #modalSaida textarea').forEach(i => i.value = '');
-    // Atualiza a lista de aparelhos caso algum status tenha mudado
     carregarAparelhos();
     openModal('modalSaida'); 
   };
   
   document.getElementById('btnDevolucao').onclick = () => {
     document.querySelectorAll('#modalDevolucao input, #modalDevolucao textarea').forEach(i => i.value = '');
-    // Atualiza a lista de aparelhos caso algum status tenha mudado
     carregarAparelhos();
     openModal('modalDevolucao');
   };
+
+  // NOVO: Botão de Abrir Modal de Linhas
+  const btnNovaLinha = document.getElementById('btnNovaLinha');
+  if (btnNovaLinha) {
+    btnNovaLinha.onclick = () => {
+      document.getElementById('fLinhaNumero').value = '';
+      openModal('modalLinha');
+    };
+  }
 
   // Botões de Confirmar Ação
   document.getElementById('btnConfCadastrar').onclick = cadastrarAparelho;
   document.getElementById('btnConfColab').onclick = cadastrarColaborador;
   document.getElementById('btnConfSaida').onclick = registrarSaida;
   document.getElementById('btnConfDev').onclick = registrarDevolucao;
+  
+  // NOVO: Botão de Confirmar Ação para Linhas
+  const btnConfLinha = document.getElementById('btnConfLinha');
+  if (btnConfLinha) btnConfLinha.onclick = cadastrarLinha;
 
   // Fechar Modais
   document.querySelectorAll('.modal-close, .btn-ghost').forEach(b => b.onclick = () => closeModal(b.closest('.modal-overlay').id));
@@ -535,5 +611,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const { ok, data } = await apiFetch(`/aparelhos/${this.value}/responsavel`);
     if (ok && data.nome) document.getElementById('fDevNome').value = data.nome;
   });
-
 });

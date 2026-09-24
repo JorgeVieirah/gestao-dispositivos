@@ -65,7 +65,23 @@ def inicializar_banco():
             FOREIGN KEY (colaborador_id) REFERENCES colaboradores (id) ON DELETE CASCADE
         )
     ''')
+
+    # Tabela de Linhas
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS linhas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero TEXT UNIQUE NOT NULL
+        )
+    ''')
     
+    try:
+        cursor.execute('''
+        ALTER TABLE aparelhos 
+        ADD COLUMN linha_id INTEGER DEFAULT NULL REFERENCES linhas(id)
+        ''')
+    except sqlite3.OperationalError:
+            pass
+        
     conexao.commit()
     conexao.close()
     print("Banco de dados e tabelas verificados/inicializados com sucesso!")
@@ -87,8 +103,55 @@ def row_para_dict(row):
 def index():
     return render_template('index.html')
 
-
 # ROTAS: EQUIPAMENTOS (CRUD COMPLETOS)
+
+@app.route('/linhas', methods=['POST'])
+def cadastrar_linha():
+    dados = request.get_json()
+    numero = dados.get('numero')
+
+    if not numero:
+        return jsonify({"erro": "O número da linha é obrigatório"}), 400
+
+    conexao = sqlite3.connect(DB_PATH)
+    cursor = conexao.cursor()
+    
+    try:
+        cursor.execute("INSERT INTO linhas (numero) VALUES (?)", (numero,))
+        conexao.commit()
+        linha_id = cursor.lastrowid
+        return jsonify({"mensagem": "Linha cadastrada com sucesso!", "id": linha_id}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({"erro": "Esta linha já está cadastrada no sistema."}), 409
+    finally:
+        conexao.close()
+
+
+@app.route('/linhas', methods=['GET'])
+def listar_linhas():
+    conexao = sqlite3.connect(DB_PATH)
+    conexao.row_factory = sqlite3.Row # Permite acessar as colunas pelo nome
+    cursor = conexao.cursor()
+    
+    # Busca a linha e faz um cruzamento para ver se há algum aparelho usando ela
+    query = """
+        SELECT l.id, l.numero, a.id as aparelho_id, a.modelo 
+        FROM linhas l
+        LEFT JOIN aparelhos a ON l.id = a.linha_id
+    """
+    linhas = cursor.execute(query).fetchall()
+    conexao.close()
+
+    resultado = []
+    for linha in linhas:
+        resultado.append({
+            "id": linha["id"],
+            "numero": linha["numero"],
+            "em_uso": True if linha["aparelho_id"] else False,
+            "aparelho_vinculado": linha["modelo"] if linha["aparelho_id"] else "Disponível na TI"
+        })
+
+    return jsonify(resultado), 200
 
 @app.route('/aparelhos', methods=['GET'])
 def get_aparelhos():
@@ -113,13 +176,17 @@ def cadastrar_aparelho():
         imei_recebido = dados.get('imei', '').strip()
         imei_final = imei_recebido if imei_recebido and categoria == 'Celular' else None
         
+        # 1. Capturamos o ID da linha que veio do frontend (se não vier, fica None)
+        linha_id = dados.get('linha_id') 
+        
+        # 2. Adicionamos linha_id na query e mais um "?" nos VALUES
         cursor.execute("""
-            INSERT INTO aparelhos (categoria, marca, modelo, numero_serie, imei, hostname, tipo_periferico, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'Disponível')
+            INSERT INTO aparelhos (categoria, marca, modelo, numero_serie, imei, hostname, tipo_periferico, status, linha_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Disponível', ?)
         """, (
             categoria, dados.get('marca'), dados.get('modelo'),
             dados.get('numero_serie'), imei_final, dados.get('hostname'), 
-            dados.get('tipo_periferico')
+            dados.get('tipo_periferico'), linha_id # 3. Passamos a variável no final
         ))
         
         conexao.commit()
